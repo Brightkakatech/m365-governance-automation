@@ -1,0 +1,17 @@
+# Report output (contains tenant data, never commit it)
+reports/
+*.csv
+
+# Test output
+testResults.xml
+coverage.xml
+
+# Secrets and local settings
+.env
+*.pfx
+*.key
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db

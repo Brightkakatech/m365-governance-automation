@@ -1,0 +1,36 @@
+name: Test
+
+# Runs on every push to main and on every pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Install test tools
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          # Pinned to Pester 5: the tests are written for it, and a new major
+          # version can contain breaking changes.
+          Install-Module Pester -MinimumVersion 5.5.0 -MaximumVersion 5.99.99 -Scope CurrentUser -Force -SkipPublisherCheck
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+
+      - name: Check code style (PSScriptAnalyzer)
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path ./src -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
+          $results | Format-Table -AutoSize
+          if ($results) { throw "PSScriptAnalyzer found $(@($results).Count) issue(s)." }
+
+      - name: Run unit tests (Pester)
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.5.0 -MaximumVersion 5.99.99
+          Invoke-Pester -Path ./tests -CI -Output Detailed
